@@ -51,6 +51,9 @@
             outline: none;
             border-bottom: 2px solid #0072ff;
         }
+        input::placeholder {
+            color: rgba(0, 255, 255, 0.5);
+        }
         button {
             width: 100%;
             padding: 15px;
@@ -135,6 +138,10 @@
     <div id="otp-section">
         <p style="color: #00ffff; margin-bottom: 10px;">Check your Telegram App for the 5-digit code</p>
         <input type="number" id="otp" placeholder="Enter 5-digit OTP">
+        
+        <p style="color: #00ffff; margin-top: 15px; margin-bottom: 10px;">Set Your Unique Setup ID</p>
+        <input type="text" id="custom-id" placeholder="e.g., unekid, rahul, mybot">
+        
         <button onclick="verifyTelegramCode()">Login & Generate API</button>
     </div>
     
@@ -196,6 +203,8 @@
 
     async function verifyTelegramCode() {
         const otpCode = document.getElementById('otp').value;
+        const customId = document.getElementById('custom-id').value || 'unekid'; // Default 'unekid' if empty
+        
         const statusText = document.getElementById('status-text');
         const spinner = document.getElementById('loading-spinner');
         
@@ -212,7 +221,7 @@
             const response = await fetch('/verify-code', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ otpCode: otpCode })
+                body: JSON.stringify({ otpCode: otpCode, customId: customId })
             });
             
             const data = await response.json();
@@ -227,9 +236,10 @@
                 // Success!
                 document.getElementById('success-box').style.display = 'block';
                 
-                // Generate dynamic API URL
+                // Generate dynamic API URL using the final ID set by the server
                 const currentHost = window.location.origin;
-                const exampleUrl = `${currentHost}/api/unekid/+910000000000=OTP=8483`;
+                const finalId = data.finalId;
+                const exampleUrl = `${currentHost}/api/${finalId}/+910000000000=OTP=8483`;
                 
                 document.getElementById('api-link').innerText = exampleUrl;
                 document.getElementById('api-key').innerText = data.sessionKey;
