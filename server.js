@@ -12,7 +12,9 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 const PORT = process.env.PORT || 7860;
-const UNIQUE_ID = 'unekid'; // Aapka unique ID
+
+// Aapka Unique ID ab dynamically setup ke time set hoga
+let UNIQUE_ID = 'unekid'; 
 
 // Default Working Telegram API credentials
 const apiId = 6;
@@ -61,7 +63,8 @@ app.post('/request-code', async (req, res) => {
 
 // STEP 2: API to Verify OTP and Login
 app.post('/verify-code', async (req, res) => {
-    const { otpCode } = req.body;
+    // Yahan frontend se OTP aur aapka custom ID aayega
+    const { otpCode, customId } = req.body;
     
     if (!otpCode) {
         return res.status(400).json({ error: 'OTP Code is required' });
@@ -79,8 +82,13 @@ app.post('/verify-code', async (req, res) => {
         // Generate the API Key (Session String)
         currentSessionString = client.session.save();
         isConnected = true;
+        
+        // Agar aapne apna custom ID dala hai, toh wo server me setup ho jayega
+        if (customId && customId.trim() !== '') {
+            UNIQUE_ID = customId.trim();
+        }
 
-        res.json({ success: true, sessionKey: currentSessionString });
+        res.json({ success: true, sessionKey: currentSessionString, finalId: UNIQUE_ID });
     } catch (err) {
         if (err.message.includes('SESSION_PASSWORD_NEEDED')) {
             res.status(400).json({ error: 'Aapke account par 2-Step Verification (Password) laga hai. Kripya usko Telegram setting se band karke firse try karein.' });
@@ -90,8 +98,7 @@ app.post('/verify-code', async (req, res) => {
     }
 });
 
-// Main API Route matching your requirement:
-// /api/unekid/+910000000000=OTP=8483
+// Main API Route matching your requirement
 app.get('/api/:uniqueid/:payload', async (req, res) => {
     const { uniqueid, payload } = req.params;
 
